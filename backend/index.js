@@ -1,25 +1,25 @@
-// server.js
-
 const express = require('express');
-const mongoose = require('mongoose');
-const sleepController = require('./controllers/sleepController');
+const app = express();
+const dotenv = require('dotenv');
+const path = require('path');
+const connectDB = require('./config/connectDB');
+const cors = require('cors');
+const errorHandler = require('./middleware/errorHandler');
+dotenv.config({ path: path.join(__dirname, 'config', 'config.env') });
 
-mongoose.connect('mongodb://localhost:27017/sleeptracker', { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => {
-        const app = express();
+connectDB();
 
-        app.use(express.json());
+// Middleware
+app.use(express.json());
+app.use(cors());
 
-        // Define routes
-        app.post('/api/sleep-entries', sleepController.createSleepEntry);
-        app.get('/api/sleep-entries', sleepController.getAllSleepEntries);
-        app.put('/api/sleep-entries/:id', sleepController.updateSleepEntry);
-        app.delete('/api/sleep-entries/:id', sleepController.deleteSleepEntry);
+// Routes
+app.use('/api/v1/sleep-entries', require('./Routes/sleepRoutes'));
 
-        app.listen(5000, () => {
-            console.log('Server running on port 5000');
-        });
-    })
-    .catch((err) => {
-        console.error('Error connecting to MongoDB:', err.message);
-    });
+// Error handler
+app.use(errorHandler);
+
+// Start server
+app.listen(process.env.PORT, () => {
+    console.log(`Server listening on Port ${process.env.PORT} in ${process.env.NODE_ENV}`);
+});
